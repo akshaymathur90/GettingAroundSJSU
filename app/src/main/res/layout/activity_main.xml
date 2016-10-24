@@ -1,17 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="edu.sjsu.gettingaroundsjsu.MainActivity">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+    <ImageView
+        android:id="@+id/flag"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/campusmap"
+        android:layout_alignParentBottom="true" />
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <ImageView
+                android:id="@+id/king"
+                android:layout_width="50dp"
+                android:layout_height="75dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/transparent"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginLeft="30dp"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="137dp" />
+
+            <ImageView
+                android:id="@+id/engr"
+                android:layout_width="60dp"
+                android:layout_height="85dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/transparent"
+                android:layout_alignTop="@+id/king"
+                android:layout_toRightOf="@+id/king"
+                android:layout_marginLeft="114dp"
+                android:layout_marginStart="114dp" />
+
+            <ImageView
+                android:id="@+id/yoshihiro"
+                android:layout_width="40dp"
+                android:layout_height="50dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/transparent"
+                android:layout_below="@+id/engr"
+                android:layout_alignLeft="@+id/king"
+                android:layout_alignStart="@+id/king"
+                android:layout_marginTop="74dp" />
+
+            <ImageView
+                android:id="@+id/studentunion"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/transparent"
+                android:layout_below="@+id/engr"
+                android:layout_alignLeft="@+id/engr"
+                android:layout_alignStart="@+id/engr" />
+
+            <ImageView
+                android:id="@+id/bbc"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/transparent"
+                android:layout_below="@+id/studentunion"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="32dp"
+                android:layout_marginEnd="32dp" />
+
+            <ImageView
+                android:id="@+id/southparking"
+                android:layout_width="70dp"
+                android:layout_height="60dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/transparent"
+                android:layout_marginBottom="35dp"
+                android:layout_marginRight="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_alignParentBottom="true"
+                android:layout_toLeftOf="@+id/studentunion"
+                android:layout_toStartOf="@+id/studentunion" />
+
+        </RelativeLayout>
+
 </RelativeLayout>
