@@ -10,11 +10,13 @@ import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.TableRow.LayoutParams;
+import android.widget.Toast;
 
 /**
  * Created by dmodh on 10/23/16.
@@ -26,11 +28,35 @@ public class BuildingDetailsActivity extends Activity {
     TableRow tr;
     TextView buildingNameTV, addressTV, distanceTV;
     ImageView buildingImage;
+    Button closeActivity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details_building);
+
+        findViewById(R.id.streetViewButton).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Toast.makeText(getApplicationContext(), view.getContentDescription(), Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        });
+
+        closeActivity = (Button) findViewById(R.id.closeActivity);
+        closeActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+        closeActivity.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Toast.makeText(getApplicationContext(), view.getContentDescription(), Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        });
 
         Building building = (Building) getIntent().getParcelableExtra(MainActivity.PAR_KEY);
 
