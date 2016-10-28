@@ -12,6 +12,7 @@ public class Building implements Parcelable {
     String buildingName;
     String address;
     String distance;
+    String time;
     String imgString;
 
     public String getBuildingName() {
@@ -46,12 +47,21 @@ public class Building implements Parcelable {
         this.imgString = imgString;
     }
 
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
     public static final Parcelable.Creator<Building> CREATOR = new Creator<Building>() {
         public Building createFromParcel(Parcel source) {
             Building building = new Building();
             building.buildingName = source.readString();
             building.address = source.readString();
             building.distance = source.readString();
+            building.time = source.readString();
             building.imgString = source.readString();
             return building;
         }
@@ -71,6 +81,7 @@ public class Building implements Parcelable {
         dest.writeString(buildingName);
         dest.writeString(address);
         dest.writeString(distance);
+        dest.writeString(time);
         dest.writeString(imgString);
     }
 }

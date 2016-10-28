@@ -28,6 +28,16 @@
             android:id="@+id/buildingNameTV" />
 
         <TextView
+            android:text="Building Address: "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:id="@+id/textView7"
+            android:layout_below="@+id/textView5"
+            android:layout_alignLeft="@+id/textView5"
+            android:layout_alignStart="@+id/textView5" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/textView7"
@@ -38,7 +48,7 @@
             android:id="@+id/addressTV" />
 
         <TextView
-            android:text="Distance: "
+            android:text="Travel Distance: "
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/addressTV"
@@ -48,7 +58,7 @@
             android:id="@+id/textView9" />
 
         <TextView
-            android:text="XX Miles"
+            android:text=""
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/distanceTV"
@@ -58,12 +68,32 @@
             android:layout_toEndOf="@+id/textView9" />
 
         <TextView
+            android:text="Travel Time: "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textView12"
+            android:layout_marginTop="15dp"
+            android:layout_below="@+id/textView9"
+            android:layout_alignLeft="@+id/textView9"
+            android:layout_alignStart="@+id/textView9" />
+
+        <TextView
+            android:text=""
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/timeTV"
+            android:layout_alignBaseline="@+id/textView12"
+            android:layout_alignBottom="@+id/distanceTV"
+            android:layout_toRightOf="@+id/textView12"
+            android:layout_toEndOf="@+id/textView12" />
+
+        <TextView
             android:text="Image: "
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/textView9"
-            android:layout_alignLeft="@+id/textView9"
-            android:layout_alignStart="@+id/textView9"
+            android:layout_below="@+id/textView12"
+            android:layout_alignLeft="@+id/textView12"
+            android:layout_alignStart="@+id/textView12"
             android:layout_marginTop="15dp"
             android:id="@+id/textView11" />
 
@@ -77,27 +107,6 @@
             android:layout_alignStart="@+id/textView11"
             android:layout_marginTop="15dp" />
 
-        <TextView
-            android:text="Building Address: "
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:id="@+id/textView7"
-            android:layout_below="@+id/textView5"
-            android:layout_alignLeft="@+id/textView5"
-            android:layout_alignStart="@+id/textView5" />
-
-        <ImageButton
-            android:layout_width="125dp"
-            android:layout_height="125dp"
-            android:layout_below="@id/buildingImage"
-            android:id="@+id/streetViewButton"
-            android:contentDescription="Street View"
-            android:background="@drawable/streetview"
-            android:onClick="openStreetView"
-            android:longClickable="true"
-            />
-
         <Button android:layout_alignParentRight="true"
             android:background="@drawable/closeicon"
             android:gravity="center_vertical|center_horizontal"
@@ -107,6 +116,19 @@
             android:onClick="closeActivity"
             android:id="@+id/closeActivity"
             />
+
+        <ImageButton
+            android:layout_width="125dp"
+            android:layout_height="125dp"
+            android:id="@+id/streetViewButton"
+            android:contentDescription="Switch to Street View"
+            android:background="@drawable/streetview"
+            android:onClick="openStreetView"
+            android:longClickable="true"
+            android:layout_below="@+id/buildingImage"
+            android:layout_alignRight="@+id/buildingNameTV"
+            android:layout_alignEnd="@+id/buildingNameTV"
+            android:layout_marginTop="15dp" />
 
     </RelativeLayout>
 

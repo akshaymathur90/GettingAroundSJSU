@@ -26,6 +26,8 @@ public class BuildingDatabase {
     //The columns we'll include in the dictionary table
     public static final String COL_WORD = "WORD";
     public static final String COL_DEFINITION = "DEFINITION";
+    public static final String COL_LATITUDE = "LATITUDE";
+    public static final String COL_LONGITUDE = "LONGITUDE";
 
     private static final String DATABASE_NAME = "DICTIONARY";
     private static final String FTS_VIRTUAL_TABLE = "FTS";
@@ -69,7 +71,9 @@ public class BuildingDatabase {
                 "CREATE VIRTUAL TABLE " + FTS_VIRTUAL_TABLE +
                         " USING fts3 (" +
                         COL_WORD + ", " +
-                        COL_DEFINITION + ")";
+                        COL_DEFINITION + "," +
+                        COL_LATITUDE + "," +
+                        COL_LONGITUDE + ")";
 
         DatabaseOpenHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -113,9 +117,9 @@ public class BuildingDatabase {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] strings = TextUtils.split(line, "-");
-                    if (strings.length < 2) continue;
-                    long id = addWord(strings[0].trim(), strings[1].trim());
-                    Log.d(TAG,"adding--> "+strings[0].trim() +" "+ strings[1].trim());
+                    if (strings.length < 4) continue;
+                    long id = addWord(strings[0].trim(), strings[1].trim(), strings[2].trim(), strings[3].trim());
+                    Log.d(TAG,"adding--> "+strings[0].trim() +" "+ strings[1].trim() + " " + strings[2].trim() +" "+ strings[3].trim());
                     if (id < 0) {
                         Log.e(TAG, "unable to add word: " + strings[0].trim());
                     }
@@ -125,10 +129,12 @@ public class BuildingDatabase {
             }
         }
 
-        public long addWord(String word, String definition) {
+        public long addWord(String word, String definition, String latitude, String longitude) {
             ContentValues initialValues = new ContentValues();
             initialValues.put(COL_WORD, word);
             initialValues.put(COL_DEFINITION, definition);
+            initialValues.put(COL_LATITUDE, latitude);
+            initialValues.put(COL_LONGITUDE, longitude);
 
             return mDatabase.insert(FTS_VIRTUAL_TABLE, null, initialValues);
         }
