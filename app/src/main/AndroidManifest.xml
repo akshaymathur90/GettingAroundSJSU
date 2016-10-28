@@ -41,6 +41,10 @@
         <activity
             android:name=".BuildingDetail"
             android:label="@string/title_activity_building_detail"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".PinPointTesting"
+            android:label="@string/title_activity_pin_point_testing"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

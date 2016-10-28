@@ -4,9 +4,15 @@ import android.*;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,7 +25,9 @@ import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -35,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected Location mLastLocation;
 
     private View baseLayout;
+    private RelativeLayout rl_Main;
 
     BuildingDatabase db;
 
@@ -56,8 +65,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         buildingDetails.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent startBuildingDetails = new Intent(getApplicationContext(), BuildingDetail.class);
+                Log.d("pinonmap","starting pin point --**");
+                Intent startBuildingDetails = new Intent(getApplicationContext(), PinPointTesting.class);
                 startActivity(startBuildingDetails);
+
             }
         });
 
@@ -70,8 +81,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.i(TAG, "Location permission has NOT been granted. Requesting permission.");
 
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) || ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
             // Provide an additional rationale to the user if the permission was not granted
             // and the user would benefit from additional context for the use of the permission.
             // For example if the user has previously denied the permission.
@@ -83,14 +93,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         @Override
                         public void onClick(View view) {
                             ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                     REQUEST_LOCATION);
                         }
                     })
                     .show();
         } else {
 
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION);
         }
     }
@@ -102,10 +112,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Log.i(TAG, "Received response for contact permissions request.");
 
             if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Snackbar.make(baseLayout, "Permissions Granted",
                         Snackbar.LENGTH_SHORT)
                         .show();
+                if (mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.disconnect();
+                }
+                mGoogleApiClient.connect();
             } else {
                 Log.i(TAG, "Location permissions were NOT granted.");
                 Snackbar.make(baseLayout, "Permissions not Granted",
@@ -148,9 +162,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         // updates. Gets the best and most recent location currently available, which may be null
         // in rare cases when a location is not available.
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -164,7 +176,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             return;
         }else {
 
-            // Camera permissions is already available, show the camera preview.
             Log.i(TAG,
                     "Location permission has already been granted. Displaying location");
 
@@ -180,6 +191,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Toast.makeText(this, "No location detected", Toast.LENGTH_LONG).show();
         }
     }
+
+    public void currentLocationMarker(){
+        rl_Main = (RelativeLayout) findViewById(R.id.relativelayout);
+        View v = new MyView(getApplicationContext(),0,0);
+        v.setLayoutParams(rl_Main.getLayoutParams());
+
+        rl_Main.addView(v);
+    }
+
 
     @Override
     public void onConnectionFailed(ConnectionResult result) {
@@ -241,6 +261,46 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Log.d(TAG,"No results found");
         }
 
+    }
+
+
+    class MyView extends View{
+
+
+        Paint paint = new Paint();
+        Point point = new Point();
+        public MyView(Context context, int x, int y) {
+            super(context);
+            paint.setColor(Color.RED);
+            paint.setStrokeWidth(15);
+            paint.setStyle(Paint.Style.FILL);
+            point.x=x;
+            point.y=y;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            Bitmap b= BitmapFactory.decodeResource(getResources(), R.drawable.transparent);
+            canvas.drawBitmap(b, 0, 0, paint);
+            canvas.drawCircle(point.x, point.y, 50, paint);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    point.x = event.getX();
+                    point.y = event.getY();
+
+            }
+            invalidate();
+            return true;
+
+        }
+
+    }
+    class Point {
+        float x, y;
     }
 
 
