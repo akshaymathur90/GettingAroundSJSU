@@ -307,8 +307,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         Log.d(TAG,"x:->" + pix_x+ "y:->"+pix_y);
 
+        Double offset_y = Math.tan(Math.toRadians(40.0d))*pix_x;
+
         //addMarker((float)pix_x-330,(float)pix_y-78);
-        addMarker((float)pix_x,(float)pix_y);
+        addMarker((float)(pix_x+70.0d),(float)(pix_y+offset_y-150.0d));
 
 
 
@@ -587,6 +589,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
 
         Paint paint = new Paint();
+        Paint paintTrans = new Paint();
         Point point = new Point();
         public MyView(Context context, float x, float y) {
             super(context);
@@ -595,6 +598,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             paint.setStyle(Paint.Style.FILL);
             point.x=x;
             point.y=y;
+            paintTrans.setColor(Color.RED);
+            paintTrans.setAlpha(127);
+            paintTrans.setStrokeWidth(15);
+            paintTrans.setStyle(Paint.Style.FILL);
+
         }
 
         @Override
@@ -602,6 +610,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Bitmap b= BitmapFactory.decodeResource(getResources(), R.drawable.transparent);
             canvas.drawBitmap(b, 0, 0, paint);
             canvas.drawCircle(point.x, point.y, 20, paint);
+            canvas.drawCircle(point.x, point.y, 60, paintTrans);
         }
 
         @Override
