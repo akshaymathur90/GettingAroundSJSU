@@ -163,16 +163,21 @@ public class BuildingDetailsActivity extends Activity {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             try {
-                JSONObject distanceObject = new JSONObject(s);
-                JSONObject jsonObj = (JSONObject) distanceObject.getJSONArray("rows").get(0);
-                JSONObject jsonElements = (JSONObject) jsonObj.getJSONArray("elements").get(0);
-                String d = jsonElements.getJSONObject("distance").getString("text");
-                String t = jsonElements.getJSONObject("duration").getString("text");
+                if(s!=null) {
+                    JSONObject distanceObject = new JSONObject(s);
+                    JSONObject jsonObj = (JSONObject) distanceObject.getJSONArray("rows").get(0);
+                    JSONObject jsonElements = (JSONObject) jsonObj.getJSONArray("elements").get(0);
+                    String d = jsonElements.getJSONObject("distance").getString("text");
+                    String t = jsonElements.getJSONObject("duration").getString("text");
 
-                Log.d(TAG,"distance is --> "+d);
-                Log.d(TAG,"duration is --> "+t);
+                    Log.d(TAG, "distance is --> " + d);
+                    Log.d(TAG, "duration is --> " + t);
 
-                updateDistanceUI(d,t);
+                    updateDistanceUI(d, t);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"Unable to contact Google Api", Toast.LENGTH_LONG).show();
+                }
 
             } catch (JSONException e) {
                 e.printStackTrace();

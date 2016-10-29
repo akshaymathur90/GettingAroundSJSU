@@ -34,11 +34,13 @@ import android.widget.Toast;
 import com.google.android.gms.awareness.fence.LocationFence;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.ByteArrayOutputStream;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ActivityCompat.OnRequestPermissionsResultCallback,LocationListener {
 
     private final String TAG = getClass().getName().toString();
     public  final static String PAR_KEY = "edu.sjsu.objectPass.par";
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     String destLatitude, destLongitude;
     private RelativeLayout rl_Main;
     View v;
+    LocationRequest mLocationRequest;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -123,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
             }
         });
+        createLocationRequest();
     }
 
     private void requestLocationPermission() {
@@ -195,8 +199,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onStop() {
         super.onStop();
         if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
+
         }
+
+
+
     }
 
     /**
@@ -227,7 +237,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
 
         }
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        startLocationUpdates();
+        /*mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
             Log.d(TAG,String.format("%s: %f", "Latitude:",
                     mLastLocation.getLatitude()));
@@ -242,8 +253,32 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         } else {
             Log.e(TAG,"No location detected");
             Toast.makeText(this, "No location detected", Toast.LENGTH_LONG).show();
-        }
+        }*/
 
+    }
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mGoogleApiClient.isConnected()){
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+       // handleNewLocation(location);
+        transformCoordinates(location.getLatitude(),location.getLongitude());
+        latitude = Double.valueOf(location.getLatitude()).toString();
+        longitude = Double.valueOf(location.getLongitude()).toString();
+        Log.d(TAG,String.format("%s: %f", "Latitude:",
+                location.getLatitude()));
+        Log.d(TAG,String.format("%s: %f", "Longitude",
+                location.getLongitude()));
     }
 
     public void transformCoordinates(Double lat, Double lng){
@@ -268,15 +303,25 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         double pix_x = percent_x * x;
         double pix_y = percent_y * y;
 
+        Log.d(TAG,"percent x:->" + percent_x+ "y:->"+percent_y);
+
         Log.d(TAG,"x:->" + pix_x+ "y:->"+pix_y);
 
-        addMarker((float)pix_x-330,(float)pix_y-78);
+        //addMarker((float)pix_x-330,(float)pix_y-78);
+        addMarker((float)pix_x,(float)pix_y);
 
 
 
 
 
 
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
     public void addMarker(float x , float y){
         rl_Main.removeView(v);
@@ -354,37 +399,49 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             switch(c.getString(0)) {
                 case "King Library":
                     makeOthersInvisible();
-                    king.setImageResource(R.drawable.redpoint);
+                    //king.setImageResource(R.drawable.redpoint);
+                    king.setBackgroundColor(Color.BLUE);
+                    king.setAlpha(0.4f);
                     king.setPadding(30,30,30,30);
                     king.setFocusable(true);
                     break;
                 case "Engineering Building":
                     makeOthersInvisible();
-                    engr.setImageResource(R.drawable.redpoint);
+                    //engr.setImageResource(R.drawable.redpoint);
+                    engr.setBackgroundColor(Color.BLUE);
+                    engr.setAlpha(0.4f);
                     engr.setPadding(30,30,30,30);
                     engr.setFocusable(true);
                     break;
                 case "Yoshihiro Uchida Hall":
                     makeOthersInvisible();
-                    yoshihiro.setImageResource(R.drawable.redpoint);
+                    //yoshihiro.setImageResource(R.drawable.redpoint);
+                    yoshihiro.setBackgroundColor(Color.BLUE);
+                    yoshihiro.setAlpha(0.4f);
                     yoshihiro.setPadding(30,30,30,30);
                     yoshihiro.setFocusable(true);
                     break;
                 case "Student Union":
                     makeOthersInvisible();
-                    studentunion.setImageResource(R.drawable.redpoint);
+                    studentunion.setBackgroundColor(Color.BLUE);
+                    studentunion.setAlpha(0.4f);
+                    //studentunion.setImageResource(R.drawable.redpoint);
                     studentunion.setPadding(30,30,30,30);
                     studentunion.setFocusable(true);
                     break;
                 case "BBC":
                     makeOthersInvisible();
-                    bbc.setImageResource(R.drawable.redpoint);
+                    //bbc.setImageResource(R.drawable.redpoint);
+                    bbc.setBackgroundColor(Color.BLUE);
+                    bbc.setAlpha(0.4f);
                     bbc.setPadding(30,30,30,30);
                     bbc.setFocusable(true);
                     break;
                 case "South Parking Garage":
                     makeOthersInvisible();
-                    southparking.setImageResource(R.drawable.redpoint);
+                    //southparking.setImageResource(R.drawable.redpoint);
+                    southparking.setBackgroundColor(Color.BLUE);
+                    southparking.setAlpha(0.4f);
                     southparking.setPadding(30,30,30,30);
                     southparking.setFocusable(true);
                     break;
@@ -406,8 +463,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("King Library");
                 building.setAddress("Dr. Martin Luther King, Jr. Library, 150 East San Fernando Street, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.336014";
                 destLongitude = "121.885648";
@@ -422,8 +479,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("Engineering Building");
                 building.setAddress("San José State University Charles W. Davidson College of Engineering, 1 Washington Square, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.337618";
                 destLongitude = "121.882243";
@@ -438,8 +495,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("Yoshihiro Uchida Hall");
                 building.setAddress("Yoshihiro Uchida Hall, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.333447";
                 destLongitude = "121.884240";
@@ -454,8 +511,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("Student Union");
                 building.setAddress("Student Union Building, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.3363275";
                 destLongitude = "121.8812869";
@@ -470,8 +527,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("BBC");
                 building.setAddress("Boccardo Business Complex, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.336804";
                 destLongitude = "121.878178";
@@ -486,8 +543,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("South Parking Garage");
                 building.setAddress("San Jose State University South Garage, 330 South 7th Street, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.332636";
                 destLongitude = "121.880560";
@@ -512,12 +569,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void makeOthersInvisible() {
-        king.setImageResource(R.drawable.transparent);
-        engr.setImageResource(R.drawable.transparent);
-        studentunion.setImageResource(R.drawable.transparent);
-        yoshihiro.setImageResource(R.drawable.transparent);
-        bbc.setImageResource(R.drawable.transparent);
-        southparking.setImageResource(R.drawable.transparent);
+        //king.setImageResource(R.drawable.transparent);
+        king.setBackgroundColor(Color.TRANSPARENT);
+        //engr.setImageResource(R.drawable.transparent);
+        engr.setBackgroundColor(Color.TRANSPARENT);
+        //studentunion.setImageResource(R.drawable.transparent);
+        studentunion.setBackgroundColor(Color.TRANSPARENT);
+        //yoshihiro.setImageResource(R.drawable.transparent);
+        yoshihiro.setBackgroundColor(Color.TRANSPARENT);
+        //bbc.setImageResource(R.drawable.transparent);
+        bbc.setBackgroundColor(Color.TRANSPARENT);
+        //southparking.setImageResource(R.drawable.transparent);
+        southparking.setBackgroundColor(Color.TRANSPARENT);
     }
 
     class MyView extends View{
