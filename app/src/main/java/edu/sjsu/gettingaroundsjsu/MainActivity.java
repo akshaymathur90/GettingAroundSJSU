@@ -2,14 +2,19 @@ package edu.sjsu.gettingaroundsjsu;
 
 import android.Manifest;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.location.Location;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,10 +24,14 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.awareness.fence.LocationFence;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -42,6 +51,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     BuildingDatabase db;
     String latitude, longitude;
     String destLatitude, destLongitude;
+    private RelativeLayout rl_Main;
+    View v;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -66,11 +77,35 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         baseLayout = findViewById(R.id.activity_main);
         db = new BuildingDatabase(this);
 
+        campusmap = (ImageView) findViewById(R.id.campusmap);
+
         initializeAll();
 
         resetOnClickListners();
 
         buildGoogleApiClient();
+
+        v = new MyView(getApplicationContext(),0,0);
+
+        rl_Main = (RelativeLayout) findViewById(R.id.rl_bottom);
+        v.setLayoutParams(rl_Main.getLayoutParams());
+
+        rl_Main.addView(v);
+        /*ImageView iv = (ImageView) findViewById(R.id.campusmap);
+        iv.setVisibility(View.GONE);*/
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.btn_getlocation);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.disconnect();
+                }
+                mGoogleApiClient.connect();
+
+
+            }
+        });
     }
 
     private void requestLocationPermission() {
@@ -183,11 +218,58 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     mLastLocation.getLongitude()));
             latitude = Double.valueOf(mLastLocation.getLatitude()).toString();
             longitude = Double.valueOf(mLastLocation.getLongitude()).toString();
+
+
+            transformCoordinates(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+
         } else {
             Log.e(TAG,"No location detected");
             Toast.makeText(this, "No location detected", Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    public void transformCoordinates(Double lat, Double lng){
+
+        float y = campusmap.getHeight();
+        float x = campusmap.getWidth();
+        Log.d(TAG,"IV height and width" +y+"---"+x);
+
+
+        double finalLat = 37.338831;
+        double baseLat  = 37.331596;
+
+        double baseLong = -121.885989;
+        double finalLong = -121.876539;
+
+        double percent_y = (lat - baseLat)/(finalLat-baseLat);
+        double percent_x = (lng - baseLong)/(finalLong-baseLong);
+
+        percent_y = 1-percent_y;
+        percent_x = 1-percent_x;
+
+        double pix_x = percent_x * x;
+        double pix_y = percent_y * y;
+
+        Log.d(TAG,"x:->" + pix_x+ "y:->"+pix_y);
+
+        addMarker((float)pix_x-330,(float)pix_y-78);
+
+
+
+
+
+
+    }
+    public void addMarker(float x , float y){
+        rl_Main.removeView(v);
+
+        v = new MyView(getApplicationContext(),x ,y);
+
+        rl_Main = (RelativeLayout) findViewById(R.id.rl_bottom);
+        v.setLayoutParams(rl_Main.getLayoutParams());
+
+        rl_Main.addView(v);
     }
 
     @Override
@@ -419,6 +501,54 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         yoshihiro.setImageResource(R.drawable.transparent);
         bbc.setImageResource(R.drawable.transparent);
         southparking.setImageResource(R.drawable.transparent);
+    }
+
+    class MyView extends View{
+
+
+        Paint paint = new Paint();
+        Point point = new Point();
+        public MyView(Context context, float x, float y) {
+            super(context);
+            paint.setColor(Color.RED);
+            paint.setStrokeWidth(15);
+            paint.setStyle(Paint.Style.FILL);
+            point.x=x;
+            point.y=y;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            Bitmap b= BitmapFactory.decodeResource(getResources(), R.drawable.transparent);
+            canvas.drawBitmap(b, 0, 0, paint);
+            canvas.drawCircle(point.x, point.y, 20, paint);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    point.x = event.getX();
+                    point.y = event.getY();
+                    Log.d(TAG,"points-->"+point.x+"- "+point.y);
+
+            }
+            invalidate();
+            return true;
+
+        }
+
+        public void addMarker(int x, int y){
+
+            point.x = x;
+            point.y = y;
+            invalidate();
+
+        }
+
+    }
+    class Point {
+        float x, y;
     }
 
 }
