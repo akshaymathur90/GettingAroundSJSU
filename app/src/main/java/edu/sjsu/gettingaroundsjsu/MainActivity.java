@@ -613,7 +613,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             canvas.drawCircle(point.x, point.y, 60, paintTrans);
         }
 
-        @Override
+        /*@Override
         public boolean onTouchEvent(MotionEvent event) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -625,7 +625,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             invalidate();
             return true;
 
-        }
+        }*/
 
         public void addMarker(int x, int y){
 
