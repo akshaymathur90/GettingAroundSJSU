@@ -67,6 +67,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
 
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG,"Listener query submit-->"+query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d(TAG,"Listener query text-->"+newText);
+                if(newText.length()==0){
+                    makeOthersInvisible();
+                }
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -239,14 +256,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         double finalLat = 37.338831;
         double baseLat  = 37.331596;
 
-        double baseLong = -121.885989;
-        double finalLong = -121.876539;
+        double baseLong = -121.885989;  //small
+        double finalLong = -121.876539; // big
 
         double percent_y = (lat - baseLat)/(finalLat-baseLat);
         double percent_x = (lng - baseLong)/(finalLong-baseLong);
 
         percent_y = 1-percent_y;
-        percent_x = 1-percent_x;
+        //percent_x = 1-percent_x;
 
         double pix_x = percent_x * x;
         double pix_y = percent_y * y;
