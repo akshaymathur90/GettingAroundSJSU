@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -26,12 +25,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.google.android.gms.awareness.fence.LocationFence;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -238,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         }
         startLocationUpdates();
-        /*mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
             Log.d(TAG,String.format("%s: %f", "Latitude:",
                     mLastLocation.getLatitude()));
@@ -253,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         } else {
             Log.e(TAG,"No location detected");
             Toast.makeText(this, "No location detected", Toast.LENGTH_LONG).show();
-        }*/
+        }
 
     }
     protected void startLocationUpdates() {
@@ -272,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onLocationChanged(Location location) {
        // handleNewLocation(location);
+
         transformCoordinates(location.getLatitude(),location.getLongitude());
         latitude = Double.valueOf(location.getLatitude()).toString();
         longitude = Double.valueOf(location.getLongitude()).toString();
@@ -283,10 +281,26 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     public void transformCoordinates(Double lat, Double lng){
 
+//        double topLeftLat = 37.3359;
+//        double latMove = topLeftLat - lat;
+//        double pixelLatMove = latMove * 14285.714285714285714;
+//
+//        double topLeftLong = -121.8860;
+//        double longMove = lng - topLeftLong;
+//        double pixelLongMove = longMove * 459375;
+//
+//        Log.d(TAG, "lat = "+lat+" long = "+lng);
+//        Log.d(TAG, "latMove = " +latMove + " LongMove = " + longMove);
+//        Log.d(TAG, "pixelLatMove = "+pixelLatMove + " pixelLongMove = " + pixelLongMove);
+//
+//        addMarker((float) pixelLatMove,(float) pixelLongMove);
+
+
+
+
         float y = campusmap.getHeight();
         float x = campusmap.getWidth();
-        Log.d(TAG,"IV height and width" +y+"---"+x);
-
+        Log.d(TAG, "x --> " + x + " y --> " +y);
 
         double finalLat = 37.338831;
         double baseLat  = 37.331596;
@@ -296,27 +310,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         double percent_y = (lat - baseLat)/(finalLat-baseLat);
         double percent_x = (lng - baseLong)/(finalLong-baseLong);
+        Log.d(TAG,"percent x:->" + percent_x+ " y:->"+percent_y);
 
-        percent_y = 1-percent_y;
-        //percent_x = 1-percent_x;
+        //percent_y = 1-percent_y;
 
         double pix_x = percent_x * x;
         double pix_y = percent_y * y;
+        Log.d(TAG,"pix_x:->" + pix_x+ " pix_y:->"+pix_y);
 
-        Log.d(TAG,"percent x:->" + percent_x+ "y:->"+percent_y);
+        Double offset_x = Math.tan(Math.toRadians(20.0d))*pix_x;
+        Double offset_y = Math.tan(Math.toRadians(35.0d))*pix_y;
+        Log.d(TAG,"offset_x:->" + offset_x+ " offset_y:->"+offset_y);
 
-        Log.d(TAG,"x:->" + pix_x+ "y:->"+pix_y);
-
-        Double offset_y = Math.tan(Math.toRadians(40.0d))*pix_x;
-
-        //addMarker((float)pix_x-330,(float)pix_y-78);
-        addMarker((float)(pix_x+70.0d),(float)(pix_y+offset_y-150.0d));
-
-
-
-
-
-
+//        addMarker((float)pix_x-330,(float)pix_y-78);
+//        addMarker((float)(pix_x+70.0d),(float)(pix_y+offset_y-150.0d)); // for Moto E
+        addMarker((float)(pix_x+offset_x),(float)(pix_y-offset_y)); // for Nexus 6
     }
 
     protected void createLocationRequest() {
@@ -326,6 +334,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
     public void addMarker(float x , float y){
+        Log.d(TAG, "x = " + x + " Y = "+y);
         rl_Main.removeView(v);
 
         v = new MyView(getApplicationContext(),x ,y);
@@ -516,8 +525,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 building.setDistance("Calculating Distance...");
                 building.setTime("Calculating Time...");
                 building.setImgString(imgString);
-                destLatitude = "37.3363275";
-                destLongitude = "121.8812869";
+                destLatitude = "37.3361433";
+                destLongitude = "121.8818196";
                 parcelableMethod(building);
             }
         });
@@ -609,11 +618,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         protected void onDraw(Canvas canvas) {
             Bitmap b= BitmapFactory.decodeResource(getResources(), R.drawable.transparent);
             canvas.drawBitmap(b, 0, 0, paint);
-            canvas.drawCircle(point.x, point.y, 20, paint);
-            canvas.drawCircle(point.x, point.y, 60, paintTrans);
+            canvas.drawCircle(point.x, point.y, 40, paint);
+            canvas.drawCircle(point.x, point.y, 120, paintTrans);
         }
 
-        /*@Override
+        @Override
         public boolean onTouchEvent(MotionEvent event) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -625,7 +634,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             invalidate();
             return true;
 
-        }*/
+        }
 
         public void addMarker(int x, int y){
 

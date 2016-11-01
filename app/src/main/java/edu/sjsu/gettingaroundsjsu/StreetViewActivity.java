@@ -36,14 +36,12 @@ public class StreetViewActivity extends AppCompatActivity {
         SupportStreetViewPanoramaFragment streetViewPanoramaFragment =
                 (SupportStreetViewPanoramaFragment)
                         getSupportFragmentManager().findFragmentById(R.id.streetviewpanorama);
-        streetViewPanoramaFragment.getStreetViewPanoramaAsync(
+            streetViewPanoramaFragment.getStreetViewPanoramaAsync(
                 new OnStreetViewPanoramaReadyCallback() {
                     @Override
                     public void onStreetViewPanoramaReady(StreetViewPanorama panorama) {
-                        // Only set the panorama to SYDNEY on startup (when no panoramas have been
-                        // loaded which is when the savedInstanceState is null).
                         if (savedInstanceState == null) {
-                            panorama.setPosition(location);
+                            panorama.setPosition(location, 200);
                         }
                     }
                 });
