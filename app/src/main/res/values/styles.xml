@@ -8,7 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.FloatingWindow" >
+    <style name="AppTheme.FloatingWindow">
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowCloseOnTouchOutside">false</item>
         <item name="android:colorBackgroundCacheHint">@null</item>

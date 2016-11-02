@@ -2,14 +2,18 @@ package edu.sjsu.gettingaroundsjsu;
 
 import android.Manifest;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Location;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,20 +23,24 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.ByteArrayOutputStream;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
 
     private final String TAG = getClass().getName().toString();
-    public  final static String PAR_KEY = "edu.sjsu.objectPass.par";
+    public final static String PAR_KEY = "edu.sjsu.objectPass.par";
     ImageView campusmap;
     ImageView king, engr, yoshihiro, studentunion, bbc, southparking;
     private final int REQUEST_LOCATION = 0;
@@ -42,6 +50,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     BuildingDatabase db;
     String latitude, longitude;
     String destLatitude, destLongitude;
+    private RelativeLayout rl_Main;
+    View v;
+    LocationRequest mLocationRequest;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -56,6 +67,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
 
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "Listener query submit-->" + query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d(TAG, "Listener query text-->" + newText);
+                if (newText.length() == 0) {
+                    makeOthersInvisible();
+                }
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -66,11 +94,36 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         baseLayout = findViewById(R.id.activity_main);
         db = new BuildingDatabase(this);
 
+        campusmap = (ImageView) findViewById(R.id.campusmap);
+
         initializeAll();
 
         resetOnClickListners();
 
         buildGoogleApiClient();
+
+        v = new MyView(getApplicationContext(), 0, 0);
+
+        rl_Main = (RelativeLayout) findViewById(R.id.rl_bottom);
+        v.setLayoutParams(rl_Main.getLayoutParams());
+
+        rl_Main.addView(v);
+        /*ImageView iv = (ImageView) findViewById(R.id.campusmap);
+        iv.setVisibility(View.GONE);*/
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.btn_getlocation);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.disconnect();
+                }
+                mGoogleApiClient.connect();
+
+
+            }
+        });
+        createLocationRequest();
     }
 
     private void requestLocationPermission() {
@@ -143,8 +196,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onStop() {
         super.onStop();
         if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
+
         }
+
+
     }
 
     /**
@@ -169,25 +227,119 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             requestLocationPermission();
 
             return;
-        }else {
+        } else {
             Log.i(TAG,
                     "Location permission has already been granted. Displaying location");
 
 
         }
+        startLocationUpdates();
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
-            Log.d(TAG,String.format("%s: %f", "Latitude:",
+            Log.d(TAG, String.format("%s: %f", "Latitude:",
                     mLastLocation.getLatitude()));
-            Log.d(TAG,String.format("%s: %f", "Longitude",
+            Log.d(TAG, String.format("%s: %f", "Longitude",
                     mLastLocation.getLongitude()));
             latitude = Double.valueOf(mLastLocation.getLatitude()).toString();
             longitude = Double.valueOf(mLastLocation.getLongitude()).toString();
+
+
+            transformCoordinates(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+
         } else {
-            Log.e(TAG,"No location detected");
+            Log.e(TAG, "No location detected");
             Toast.makeText(this, "No location detected", Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    protected void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            requestLocationPermission();
+            return;
+        }
+        else {
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient, mLocationRequest, this);
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mGoogleApiClient.isConnected()){
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+       // handleNewLocation(location);
+
+        transformCoordinates(location.getLatitude(),location.getLongitude());
+        latitude = Double.valueOf(location.getLatitude()).toString();
+        longitude = Double.valueOf(location.getLongitude()).toString();
+        Log.d(TAG,String.format("%s: %f", "Latitude:",
+                location.getLatitude()));
+        Log.d(TAG,String.format("%s: %f", "Longitude",
+                location.getLongitude()));
+    }
+
+    public void transformCoordinates(Double lat, Double lng){
+
+        float y = campusmap.getHeight();
+        float x = campusmap.getWidth();
+        Log.d(TAG, "x --> " + x + " y --> " +y);
+
+        double finalLat = 37.338831;
+        double baseLat  = 37.331596;
+
+        double baseLong = -121.885989;  //small
+        double finalLong = -121.876539; // big
+
+        double percent_y = (lat - baseLat)/(finalLat-baseLat);
+        double percent_x = (lng - baseLong)/(finalLong-baseLong);
+        Log.d(TAG,"percent x:->" + percent_x+ " y:->"+percent_y);
+
+        percent_y = 1-percent_y;
+
+        double pix_x = percent_x * x;
+        double pix_y = percent_y * y;
+        Log.d(TAG,"pix_x:->" + pix_x+ " pix_y:->"+pix_y);
+
+        Double offset_y = Math.tan(Math.toRadians(40.0d))*pix_x;
+        Double offset_x = Math.tan(Math.toRadians(15.0d))*(pix_y-400.0d);
+        Log.d(TAG,"offset_x:->" + offset_x+ " offset_y:->"+offset_y);
+
+//        addMarker((float)pix_x-330,(float)pix_y-78);
+//        addMarker((float)(pix_x+70.0d),(float)(pix_y+offset_y-150.0d)); // for Moto E
+        addMarker((float)(pix_x-offset_x+150.0d),(float)(pix_y+offset_y-400.0d)); // for Nexus
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+    public void addMarker(float x , float y){
+        Log.d(TAG, "x = " + x + " Y = "+y);
+        rl_Main.removeView(v);
+
+        v = new MyView(getApplicationContext(),x ,y);
+
+        rl_Main = (RelativeLayout) findViewById(R.id.rl_bottom);
+        v.setLayoutParams(rl_Main.getLayoutParams());
+
+        rl_Main.addView(v);
     }
 
     @Override
@@ -255,37 +407,49 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             switch(c.getString(0)) {
                 case "King Library":
                     makeOthersInvisible();
-                    king.setImageResource(R.drawable.redpoint);
+                    //king.setImageResource(R.drawable.redpoint);
+                    king.setBackgroundColor(Color.BLUE);
+                    king.setAlpha(0.4f);
                     king.setPadding(30,30,30,30);
                     king.setFocusable(true);
                     break;
                 case "Engineering Building":
                     makeOthersInvisible();
-                    engr.setImageResource(R.drawable.redpoint);
+                    //engr.setImageResource(R.drawable.redpoint);
+                    engr.setBackgroundColor(Color.BLUE);
+                    engr.setAlpha(0.4f);
                     engr.setPadding(30,30,30,30);
                     engr.setFocusable(true);
                     break;
                 case "Yoshihiro Uchida Hall":
                     makeOthersInvisible();
-                    yoshihiro.setImageResource(R.drawable.redpoint);
+                    //yoshihiro.setImageResource(R.drawable.redpoint);
+                    yoshihiro.setBackgroundColor(Color.BLUE);
+                    yoshihiro.setAlpha(0.4f);
                     yoshihiro.setPadding(30,30,30,30);
                     yoshihiro.setFocusable(true);
                     break;
                 case "Student Union":
                     makeOthersInvisible();
-                    studentunion.setImageResource(R.drawable.redpoint);
+                    studentunion.setBackgroundColor(Color.BLUE);
+                    studentunion.setAlpha(0.4f);
+                    //studentunion.setImageResource(R.drawable.redpoint);
                     studentunion.setPadding(30,30,30,30);
                     studentunion.setFocusable(true);
                     break;
                 case "BBC":
                     makeOthersInvisible();
-                    bbc.setImageResource(R.drawable.redpoint);
+                    //bbc.setImageResource(R.drawable.redpoint);
+                    bbc.setBackgroundColor(Color.BLUE);
+                    bbc.setAlpha(0.4f);
                     bbc.setPadding(30,30,30,30);
                     bbc.setFocusable(true);
                     break;
                 case "South Parking Garage":
                     makeOthersInvisible();
-                    southparking.setImageResource(R.drawable.redpoint);
+                    //southparking.setImageResource(R.drawable.redpoint);
+                    southparking.setBackgroundColor(Color.BLUE);
+                    southparking.setAlpha(0.4f);
                     southparking.setPadding(30,30,30,30);
                     southparking.setFocusable(true);
                     break;
@@ -307,8 +471,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("King Library");
                 building.setAddress("Dr. Martin Luther King, Jr. Library, 150 East San Fernando Street, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.336014";
                 destLongitude = "121.885648";
@@ -323,8 +487,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("Engineering Building");
                 building.setAddress("San José State University Charles W. Davidson College of Engineering, 1 Washington Square, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.337618";
                 destLongitude = "121.882243";
@@ -339,8 +503,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("Yoshihiro Uchida Hall");
                 building.setAddress("Yoshihiro Uchida Hall, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.333447";
                 destLongitude = "121.884240";
@@ -355,11 +519,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("Student Union");
                 building.setAddress("Student Union Building, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
-                destLatitude = "37.3363275";
-                destLongitude = "121.8812869";
+                destLatitude = "37.3361433";
+                destLongitude = "121.8818196";
                 parcelableMethod(building);
             }
         });
@@ -371,8 +535,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("BBC");
                 building.setAddress("Boccardo Business Complex, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.336804";
                 destLongitude = "121.878178";
@@ -387,8 +551,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 Building building = new Building();
                 building.setBuildingName("South Parking Garage");
                 building.setAddress("San Jose State University South Garage, 330 South 7th Street, San Jose, CA 95112");
-                building.setDistance("XX Miles");
-                building.setTime("YY Minutes");
+                building.setDistance("Calculating Distance...");
+                building.setTime("Calculating Time...");
                 building.setImgString(imgString);
                 destLatitude = "37.332636";
                 destLongitude = "121.880560";
@@ -413,12 +577,75 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void makeOthersInvisible() {
-        king.setImageResource(R.drawable.transparent);
-        engr.setImageResource(R.drawable.transparent);
-        studentunion.setImageResource(R.drawable.transparent);
-        yoshihiro.setImageResource(R.drawable.transparent);
-        bbc.setImageResource(R.drawable.transparent);
-        southparking.setImageResource(R.drawable.transparent);
+        //king.setImageResource(R.drawable.transparent);
+        king.setBackgroundColor(Color.TRANSPARENT);
+        //engr.setImageResource(R.drawable.transparent);
+        engr.setBackgroundColor(Color.TRANSPARENT);
+        //studentunion.setImageResource(R.drawable.transparent);
+        studentunion.setBackgroundColor(Color.TRANSPARENT);
+        //yoshihiro.setImageResource(R.drawable.transparent);
+        yoshihiro.setBackgroundColor(Color.TRANSPARENT);
+        //bbc.setImageResource(R.drawable.transparent);
+        bbc.setBackgroundColor(Color.TRANSPARENT);
+        //southparking.setImageResource(R.drawable.transparent);
+        southparking.setBackgroundColor(Color.TRANSPARENT);
+    }
+
+    class MyView extends View{
+
+
+        Paint paint = new Paint();
+        Paint paintTrans = new Paint();
+        Point point = new Point();
+        public MyView(Context context, float x, float y) {
+            super(context);
+            paint.setColor(Color.RED);
+            paint.setStrokeWidth(15);
+            paint.setStyle(Paint.Style.FILL);
+            point.x=x;
+            point.y=y;
+            paintTrans.setColor(Color.RED);
+            paintTrans.setAlpha(127);
+            paintTrans.setStrokeWidth(15);
+            paintTrans.setStyle(Paint.Style.FILL);
+
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            Bitmap b= BitmapFactory.decodeResource(getResources(), R.drawable.transparent);
+            canvas.drawBitmap(b, 0, 0, paint);
+            canvas.drawCircle(point.x, point.y, 40, paint);
+            canvas.drawCircle(point.x, point.y, 120, paintTrans);
+        }
+
+        /*
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    point.x = event.getX();
+                    point.y = event.getY();
+                    Log.d(TAG,"points-->"+point.x+"- "+point.y);
+
+            }
+            invalidate();
+            return true;
+
+        }
+        */
+
+        public void addMarker(int x, int y){
+
+            point.x = x;
+            point.y = y;
+            invalidate();
+
+        }
+
+    }
+    class Point {
+        float x, y;
     }
 
 }
